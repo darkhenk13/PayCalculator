@@ -1,0 +1,15 @@
+version: '3.9'
+
+services:
+  bot:
+    build: .
+    container_name: telegram_bot
+    environment:
+      TZ: "Europe/Moscow"
+      TOKEN: "${TOKEN}"
+    restart: always
+    deploy:
+     resources:
+      limits:
+       cpus: '0.2'
+       memory: 128M

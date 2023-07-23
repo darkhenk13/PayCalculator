@@ -1,3 +1,4 @@
+import os
 import requests
 import json
 from datetime import datetime
@@ -5,9 +6,9 @@ from calendar import monthrange
 import telebot
 
 year = 2023
-token  = "token"
+token = os.getenv('TOKEN')
 
-bot=telebot.TeleBot(token)
+bot = telebot.TeleBot(token)
 
 #получение праздничных и выходных дней
 def __calendar(month):
