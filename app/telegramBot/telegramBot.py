@@ -1,107 +1,13 @@
-from prometheus_client import start_wsgi_server, make_wsgi_app
-import os
-import requests
-import json
-from datetime import datetime
-from calendar import monthrange
-import logging
-import telebot
+from app import *
+from app.logicsBot import calendarLogics
 
 
 
-logging.getLogger().setLevel(level=os.environ.get('LOGLEVEL', 'INFO').upper())
-logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s")
-
-
-logging.info('Application initialization')
-
-
-#start_http_server(8000)
-
-app = make_wsgi_app(disable_compression=True)
-
-start_wsgi_server(8000)
-
-
-
-year = 2023
 token = os.getenv('TOKEN')
 
 bot = telebot.TeleBot(token)
 
-#получение праздничных и выходных дней
-def __calendar(month):
-    #Получить список дат
-    req = requests.get(f'http://xmlcalendar.ru/data/ru/{year}/calendar.json')
-    json_req = json.loads(req.text)
-    list_date = json_req['months']
-    #парсинг
-    #Выбрать месяц
-    #Добавить к month - 1
-    month_add = month - 1
-    #Добавление days для отображения дат
-    month_result = list_date[month_add]['days']
-    #обернуть month_result в лист
-    month_result_list = month_result.split(",")
-    list(month_result_list)
-    #исключить из массива даты со спец знаком.
-    #Добавляем новый массив
-    month_result_update = []
-    #делаем поиск предпразничных и праздничных дней
-    for i in month_result_list:
-        if i.find('+') == 2:
-            #если находи цифру с +, тогда добавляем в массив
-            month_result_update.append(int(i.replace("+", "")))
-        elif i.find('*') == 2:
-            # если находи цифру с *, тогда добавляем в массив
-            month_result_update.append(int(i.replace("*", "")))
-        else:
-            month_result_update.append(int(i))
-    return month_result_update
 
-
-# количество дней в месяце
-def number_month(month):
-    current_year = datetime.now().year
-    days = monthrange(current_year, month)[1]
-    return days
-
-
-def is_int(str):
-    try:
-        int(str)
-        return True
-    except ValueError:
-        return False
-
-
-def func_date(month, month_days):
-    mass_1 = []  # массив для формирования рабочих дней
-    mass_2 = []  # массив для формирования рабочих дней
-    mass_month = []  # массив для формирования дней по месяцам
-    # сгенерировать массив с датой
-    for i in range(month):
-        day = i + 1
-        mass_month.append(day)
-    # print(mass_month)
-    # Разделить на первую половину месяца и на вторую
-    day_1 = 15
-    day_2 = day - day_1
-    # print(day_2)
-    # первая половина месяца
-    for i in range(day_1):
-        mass_1.append(i + 1)
-    # вторая половина месяца
-    num = 16
-    for i in range(day_2):
-        mass_2.append(num)
-        num += 1
-    # убрать выходные
-    # за первую половину 15 дней
-    result_day_1 = list(set(mass_1) - set(month_days))
-    # за вторую половину
-    result_day_2 = list(set(mass_2) - set(month_days))
-    return result_day_1, result_day_2
 
 def extract_arg(arg):
     return arg.split()[1:]
@@ -122,15 +28,15 @@ def start(message):
     if len(status) != 0:
         if month_list.count(status[0]) > 0:
             if len(status) == 2:
-                if is_int(status[1]) == True:
+                if calendarLogics.is_int(status[1]) == True:
                     #количество праздничных дней
                     int_num = month_list.index(status[0]) + 1
                     # количество дней в месяце
-                    res_days_month = number_month(int_num)
+                    res_days_month = calendarLogics.number_month(int_num)
                     #количество выходных дней
-                    res_days_calendar = __calendar(int_num)
+                    res_days_calendar = calendarLogics.__calendar(int_num)
                     # получить количество рабочих дней
-                    res_job_days = func_date(res_days_month, res_days_calendar)
+                    res_job_days = calendarLogics.func_date(res_days_month, res_days_calendar)
                     res_job_days_sum = len(res_job_days[1]) + len(res_job_days[0])
                     # количество рабочих дней за весь месяц
                     # за первую половину месяца
